@@ -10,10 +10,11 @@
 
 ## 使用方法
 
-1. 在Windows机器上启动CC_server.py并常驻运行
-2. 根据自己的网络环境修改CC_client.py的配置，按照文件中的注释修改即可
-3. 配置client中的`defualt_update_list`项，填入同时需要同步的其他文件，支持文件和文件夹
-4. 在Linux机器上执行`alias run="sudo python3 CC_client.py"`
+1. 将`CC_server.py`放在Windows机器项目根目录下，`CC_client.py`放在Linux机器项目根目录下
+2. 在Windows机器上启动CC_server.py并常驻运行
+3. 根据自己的网络环境修改CC_client.py的配置，按照文件中的注释修改即可
+4. 配置client中的`defualt_update_list`项，填入同时需要同步的其他文件，支持文件和文件夹
+5. 在Linux机器上执行`alias run="sudo python3 CC_client.py"`
     
     `run`可以替换成其他字符串
-5. 运行`run your_script.py`
+6. 运行`run your_script.py`
