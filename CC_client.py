@@ -4,16 +4,16 @@ import zmq
 import subprocess
 
 
-defualt_update_list = ['models']
+defualt_update_list = ['models']  # 这里填入其他需要同步的环境文件
 
 
 if len(sys.argv) < 2:
     raise IndexError('需要一个文件')
 
-server_ip = '192.168.10.118'
-self_ip = '192.168.10.42'
-user_name = 'khadas'
-password = 'khadas'
+server_ip = '192.168.10.118'    # 服务器ip，修改为你的Windows主机地址
+self_ip = '192.168.10.42'       # 机器自身ip，需要唯一，不能跟其他client相同
+user_name = 'khadas'            # 登录机器的用户名
+password = 'khadas'             # 登录机器的密码
 
 zmq_context = zmq.Context()
 socket = zmq_context.socket(zmq.REQ)
