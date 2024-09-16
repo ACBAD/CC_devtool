@@ -2,12 +2,19 @@ import asyncio
 import os
 import aioconsole
 import zmq
+import hashlib
 import paramiko
 from scp import SCPClient
 from concurrent.futures import ThreadPoolExecutor
 
-
 ssh_instances: dict[str, paramiko.SSHClient] = {}
+
+
+def get_file_hash(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        return ''
+    with open(file_path, 'rb') as f:
+        return hashlib.md5(f.read()).hexdigest()
 
 
 async def update_file(local_path, remote_path, ssh_instance: paramiko.SSHClient):
@@ -15,10 +22,17 @@ async def update_file(local_path, remote_path, ssh_instance: paramiko.SSHClient)
         scp.put(local_path, remote_path)
 
 
-async def update_dirs(local_dir, remote_dir, ssh_instance: paramiko.SSHClient):
+async def update_dirs(local_dir, remote_dir, ssh_instance: paramiko.SSHClient, hash_dict: dict = None):
+    files_need_transfer = [file for file in os.listdir(local_dir) if os.path.isfile(os.path.join(local_dir, file))]
+    if hash_dict:
+        for file_name, file_hash in hash_dict.items():
+            local_hash = get_file_hash(str(os.path.join(local_dir, file_name)))
+            if not local_hash:
+                continue
+            if local_hash == file_hash:
+                files_need_transfer.remove(file_name)
     with SCPClient(ssh_instance.get_transport()) as scp:
-        files = os.listdir(local_dir)
-        for file in files:
+        for file in files_need_transfer:
             scp.put(os.path.join(local_dir, file), f'{remote_dir}/{file}')
 
 
@@ -74,7 +88,10 @@ async def zmq_server():
                 if not os.path.exists(local_dir):
                     socket.send_json({'status': 'error', 'error': 'local path does not exist'})
                     continue
-                await update_dirs(local_dir, command['remote_path'], ssh_instances[command['client_ip']])
+                await update_dirs(local_dir,
+                                  command['remote_path'],
+                                  ssh_instances[command['client_ip']],
+                                  command.get('file_hash', None))
                 socket.send_json({'status': 'ok'})
             except Exception as e:
                 socket.send_json({'status': 'error', 'error': str(e)})
@@ -97,6 +114,9 @@ async def shell():
             for client in ssh_instances.values():
                 client.close()
             break
+        if command == 'ls':
+            for client in ssh_instances.keys():
+                print(client)
 
 
 if __name__ == '__main__':
